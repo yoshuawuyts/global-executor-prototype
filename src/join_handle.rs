@@ -1,8 +1,8 @@
-use std::future::Future;
+use std::{fmt::Debug, future::Future};
 use std::pin::Pin;
 
+use crate::{Task, RawHandle};
 use core::task::{Context, Poll};
-use crate::Task;
 
 /// A handle that awaits the result of a task.
 ///
@@ -12,17 +12,22 @@ use crate::Task;
 /// Created when a task is [spawned].
 ///
 /// [spawned]: fn.spawn.html
-#[derive(Debug)]
-pub struct JoinHandle<T> {
-    handle: Option<InnerHandle<T>>,
+pub struct JoinHandle<T: 'static> {
+    handle: Option<RawHandle<T>>,
     task: Task,
+}
+
+impl<T: 'static> Debug for JoinHandle<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("JoinHandle").finish()
+    }
 }
 
 // type InnerHandle<T> = async_global_executor::Task<T>;
 
 impl<T> JoinHandle<T> {
     /// Creates a new `JoinHandle`.
-    pub(crate) fn new(inner: InnerHandle<T>, task: Task) -> JoinHandle<T> {
+    pub(crate) fn new(inner: RawHandle<T>, task: Task) -> JoinHandle<T> {
         JoinHandle {
             handle: Some(inner),
             task,
@@ -48,27 +53,25 @@ impl<T> JoinHandle<T> {
         &self.task
     }
 
-    /// Cancel this task.
-    #[cfg(not(target_os = "unknown"))]
-    pub async fn cancel(mut self) -> Option<T> {
-        let handle = self.handle.take().unwrap();
-        handle.cancel().await
-    }
+    // /// Cancel this task.
+    // pub async fn cancel(mut self) -> Option<T> {
+    //     let handle = self.handle.take().unwrap();
+    //     handle.cancel().await
+    // }
 }
 
-#[cfg(not(target_os = "unknown"))]
-impl<T> Drop for JoinHandle<T> {
-    fn drop(&mut self) {
-        if let Some(handle) = self.handle.take() {
-            handle.detach();
-        }
-    }
-}
+// #[cfg(not(target_os = "unknown"))]
+// impl<T> Drop for JoinHandle<T> {
+//     fn drop(&mut self) {
+//         if let Some(handle) = self.handle.take() {
+//             handle.detach();
+//         }
+//     }
+// }
 
 impl<T> Future for JoinHandle<T> {
     type Output = T;
 
-    #[cfg(not(target_os = "unknown"))]
     fn poll(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
         Pin::new(&mut self.handle.as_mut().unwrap()).poll(cx)
     }
