@@ -1,0 +1,20 @@
+[package]
+name = "global-executor"
+version = "1.0.0"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/yoshuawuyts/global-executor"
+documentation = "https://docs.rs/global-executor"
+description = "A global futures executor"
+readme = "README.md"
+edition = "2018"
+keywords = []
+categories = []
+authors = [
+    "Yoshua Wuyts <yoshuawuyts@gmail.com>"
+]
+
+[features]
+
+[dependencies]
+
+[dev-dependencies]
