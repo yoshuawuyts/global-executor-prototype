@@ -16,6 +16,9 @@ mod task;
 mod task_id;
 mod task_policy;
 
+#[doc(hidden)]
+pub mod internal;
+
 pub use join_handle::JoinHandle;
 pub use raw_handle::RawHandle;
 pub use task::Task;
@@ -58,5 +61,3 @@ pub trait GlobalExec {
         self.spawn(async { f() }, policy)
     }
 }
-
-fn create_task<E: GlobalExec>(exec: &E) {}
